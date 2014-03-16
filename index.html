@@ -1,0 +1,163 @@
+
+<html>
+	<head>
+
+		<title>Number Trivia</title>
+
+	
+		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'>
+
+		<link rel="stylesheet" href="./css/foundation.css">
+	
+		<script src="jquery.js"></script>
+		<script src="http://js.leapmotion.com/0.2.0/leap.min.js"></script>
+
+		<script src="../GeDaiDemo/LeapTrainer.js/leaptrainer.min.js"></script>
+		 <style>
+	
+			  #canvas{
+				  width:	100%;
+				  height:	100%;
+				  position: absolute;
+				  z-index: -1000;
+			  }
+			  
+		  </style>
+
+		<!--Header and Nav-->
+	</head>
+	<body onclick = "getTrivia()" style = "background-color: #000000;">
+	
+			</br></br></br></br> <canvas id="canvas"></canvas>
+		
+		<script>
+
+		 	var canvas = document.getElementById( 'canvas' );
+     		 var c =  canvas.getContext( '2d' );
+			 var width = canvas.width;
+			 var height = canvas.height;
+
+			      var frame;
+
+			function leapToScene( leapPos ){
+
+			    var iBox = frame.interactionBox;
+
+			    var left = iBox.center[0] - iBox.size[0]/2;
+			    var top = iBox.center[1] + iBox.size[1]/2;
+
+			    var x = leapPos[0] - left;
+		        var y = leapPos[1] - top;
+
+			    x /= iBox.size[0];
+		        y /= iBox.size[1];
+
+		        x *= width;
+		        y *= height;
+
+		        return [ x , -y ];
+
+			 }
+
+			
+			var leapController = new Leap.Controller({ enableGestures: true });
+			
+			function onSwipe(gesture){
+	    	  var startPos = leapToScene( gesture.startPosition );
+		      var pos = leapToScene( gesture.position );
+
+		      // Setting up the style for the stroke
+		      c.strokeStyle = "#FF00A2";
+		      c.lineWidth = 1;
+
+		      // Drawing the path
+		      c.beginPath();
+
+		      // Move to the start position
+		      c.moveTo( startPos[0] , startPos[1] );
+
+		      // Draw a line to current position
+		      c.lineTo( pos[0] , pos[1] );
+
+		      c.closePath();
+		      c.stroke();
+		      getTrivia();
+		
+			}
+
+			leapController.on('frame' , function( data ){
+		        frame = data;
+		        c.clearRect( 0 , 0 , width , height );
+		        for( var i =  0; i < frame.gestures.length; i++){
+			      var gesture  = frame.gestures[0];
+			      var type = gesture.type;
+
+			       switch( type ){
+          
+			          case "circle":
+			            break;
+			            
+			          case "swipe":
+			            onSwipe( gesture );
+			            break;
+			          
+			          case "screenTap":
+			            break;
+
+			          case "keyTap":
+			            break;
+			        }
+			      }
+			});
+			leapController.connect();
+		
+		function getTrivia() {
+				var num = Math.floor((Math.random() * 1000) + 1);
+				var what;
+				var trivia = $.ajax({
+					type: "GET",
+					beforeSend: function(xhr) {
+						xhr.setRequestHeader("X-Mashape-Authorization", "EssTZGB5OTOYmYCqNtoVZH8cDE0Qq5kc");
+						},
+					url: "https://numbersapi.p.mashape.com/" + num + 
+					"/trivia?fragment=true&notfound=floor&json=true",
+					dataType: "json",
+					crossDomain: true,
+					success:function(data) {
+						$("#randomNum").html(data.number);
+						$("#numFact").html(data.text);
+						$("button").html("TELL ME MORE!");
+						//$("body").attr("style", "background: url(\"http://lorempixel.com/g/1000/750\"); background-size: cover;");
+					}
+				});
+			}
+			</script>
+
+		<div style = "border-style: solid; border-color: #027073; background-color:rgba(0,0,0,0.7);" class = "large-8 small-8 large-centered small-centered columns">
+
+		</br></br>
+		<!--<h4>
+			<button style = "background-color:#0BADBF; font-family:'Raleway'; color: black;" onclick = "getTrivia()">
+				Number Trivia!
+			</button>
+		</h4>-->
+
+
+			<div class = "large-3 small-12 large-centered columns">
+				<h1 style = "color: #05F2BC; font-family: 'Arvo';" id = "randomNum">?</h1>
+			</div>
+
+		</br>
+
+			<div class = "large-8 large-centered columns">	
+				<h5 style = "color: #04BEBF;" id = "numFact"></h5>
+			</div>
+		</br>
+
+		</div>
+		
+	</body>
+</html>
